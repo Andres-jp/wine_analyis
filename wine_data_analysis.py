@@ -116,5 +116,12 @@ n_classes = len(np.unique(y_train))
 n = min(n_classes - 1, n_components)
 lda = LinearDiscriminantAnalysis(n_components=n) #n_components = Number of components (<= min(n_classes - 1, n_features))
 lda.fit(X_train, y_train)
+y_pred_lda = lda.predict(X_test)
 
-#Segundo modelo: K-nearest neighbours (KNN)
+#Segundo modelo: NAÏVE BAYES
+from sklearn.naive_bayes import GaussianNB
+gnb = GaussianNB()
+gnb.fit(X_train, y_train)
+y_pred_gnb = gnb.predict(X_test)
+
+
