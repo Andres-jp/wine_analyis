@@ -63,24 +63,39 @@ print(wine_df.describe()) # checking the summary statistics of the dataset
 #Normalización de variables numéricas
 from sklearn.preprocessing import StandardScaler
 
-
-#Excluimos la variable objetivo 'quality' y la columna 'Id'
-columnas_a_escalar = wine_df.drop(columns=['quality', 'Id']).columns
-
-wine_df_scaled = pd.DataFrame(StandardScaler().fit_transform(wine_df[columnas_a_escalar]), columns=columnas_a_escalar)
-
-
-#checking the normalized data
-print("============ Normalized Dataset Summary ============")
-print(wine_df_scaled.describe())
-
 '''
 Reducción de Dimensionalidad usando PCA:
 '''
-from sklearn import decomposition
-pca = decomposition.PCA(n_components=9).fit(wine_df_scaled)
-print("============ PCA Explained Variance Ratio ============")
-print(100*pca.explained_variance_ratio_) # checking the explained variance ratio of the PCA
-print("============ PCA Cumulative Explained Variance ============")
-print(100*pca.explained_variance_ratio_.cumsum()) # checking the cumulative explained variance of the PCA
+#Escalado de las características numéricas
+features = wine_df[['fixed acidity', 'volatile acidity', 'citric acid', 'residual sugar', 'chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density', 'pH', 'sulphates', 'alcohol']] #Excluimos la variable objetivo 'quality' y la columna 'Id'
+classes = wine_df['quality']
 
+features_scaled = StandardScaler().fit_transform(features) # normalizing the features# checking the shape of the scaled features and original dataset
+
+from sklearn import decomposition
+pca = decomposition.PCA().fit(features_scaled)
+features_pca = pca.transform(features_scaled)#Projecting the data to the new PCA space
+
+print("============ PCA Transformed Dataset Analysis ============")  
+print("Eigenvalues:", pca.explained_variance_)
+print("Explained variance",pca.explained_variance_ratio_.cumsum()*100)
+
+#Project the data in a space of reduced dimensionality:
+#Nos quedamos con el número de componentes necesarios para explicar el 95% de la varianza cumulativa
+for i in range(len(pca.explained_variance_ratio_)):
+    if pca.explained_variance_ratio_.cumsum()[i]*100 > 95:
+        n_components = i+1
+        break
+print(f"Number of PCA components to keep: {n_components}")    
+wine_df_pca = pd.DataFrame(features_pca[:,0:n_components],columns=[f'PC{j+1}' for j in range(n_components)])
+
+print("============ PCA Transformed Dataset Head ============")
+print('Dimensionalidad datos en espacio PCA reducido = {}'.format(wine_df_pca.shape))
+print(wine_df_pca.head()) # checking the first 5 rows of the new PCA dataset
+
+sns.pairplot(wine_df_pca)
+plt.show()
+
+'''
+Clasificación:
+'''
