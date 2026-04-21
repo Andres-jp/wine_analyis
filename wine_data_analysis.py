@@ -44,6 +44,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import decomposition
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.model_selection import cross_val_score
 
 # Loading the dataset"
 current_path = os.getcwd()
@@ -103,6 +108,7 @@ plt.show()
 '''
 Clasificación:
 '''
+np.random.seed(42)
 #Crear lo sets de train y test
 X_train, X_test, y_train, y_test = train_test_split(wine_df_pca, classes, test_size=0.3, random_state=42)#Proporción 70/30 para train y test
 print("============ Train and Test Set Shapes ============")
@@ -119,9 +125,37 @@ lda.fit(X_train, y_train)
 y_pred_lda = lda.predict(X_test)
 
 #Segundo modelo: NAÏVE BAYES
-from sklearn.naive_bayes import GaussianNB
 gnb = GaussianNB()
 gnb.fit(X_train, y_train)
 y_pred_gnb = gnb.predict(X_test)
 
+'''
+Evaluación de Modelos:
+'''
+print("============ LDA ============")
+print("Accuracy LDA:", accuracy_score(y_test, y_pred_lda))
+mlda = confusion_matrix(y_test, y_pred_lda)
+#print(classification_report(y_test, y_pred_lda))
 
+
+print("============ NAÏVE BAYES ============")
+print("Accuracy Naive Bayes:", accuracy_score(y_test, y_pred_gnb))
+mbayes = confusion_matrix(y_test, y_pred_gnb)
+#print(classification_report(y_test, y_pred_gnb))
+
+fig, ax = plt.subplots(1, 2, figsize=(16, 4),sharey=True)
+
+sns.heatmap(mlda,annot = True,linewidths=0.5,linecolor="green",fmt = ".0f",ax=ax[0])
+ax[0].set_title('Matriz de Confusión - LDA')
+ax[0].set_xlabel('Etiqueta Predicha')
+ax[0].set_ylabel('Etiqueta Real')
+
+sns.heatmap(mbayes,annot = True,linewidths=0.5,linecolor="green",fmt = ".0f",ax=ax[1])
+ax[1].set_title('Matriz de Confusión - Naïve Bayes')
+ax[1].set_xlabel('Etiqueta Predicha')
+ax[1].set_ylabel('Etiqueta Real')
+
+plt.tight_layout()
+plt.show()
+
+print(y_test.value_counts())
