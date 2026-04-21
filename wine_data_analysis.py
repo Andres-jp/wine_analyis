@@ -68,7 +68,7 @@ from sklearn.preprocessing import StandardScaler
 columnas_a_escalar = wine_df.drop(columns=['quality', 'Id']).columns
 
 wine_df_scaled = pd.DataFrame(StandardScaler().fit_transform(wine_df[columnas_a_escalar]), columns=columnas_a_escalar)
-wine_df_scaled['quality'] = wine_df['quality']
+
 
 #checking the normalized data
 print("============ Normalized Dataset Summary ============")
@@ -77,5 +77,10 @@ print(wine_df_scaled.describe())
 '''
 Reducción de Dimensionalidad usando PCA:
 '''
-
+from sklearn import decomposition
+pca = decomposition.PCA(n_components=9).fit(wine_df_scaled)
+print("============ PCA Explained Variance Ratio ============")
+print(100*pca.explained_variance_ratio_) # checking the explained variance ratio of the PCA
+print("============ PCA Cumulative Explained Variance ============")
+print(100*pca.explained_variance_ratio_.cumsum()) # checking the cumulative explained variance of the PCA
 
