@@ -30,13 +30,20 @@ Evaluación de Modelos:
     Evaluar el rendimiento de cada modelo clasificador utilizando métricas como la precisión, la matriz de confusión, ...
     Comparar los rendimientos de los dos clasificadores basándose en estas métricas.
 '''
+
 #data analysis of wine quiality data set
+
+
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn import decomposition
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 # Loading the dataset"
 current_path = os.getcwd()
@@ -60,19 +67,16 @@ plt.tight_layout()
 plt.show()
 print("============ Dataset Summary ============")
 print(wine_df.describe()) # checking the summary statistics of the dataset
-#Normalización de variables numéricas
-from sklearn.preprocessing import StandardScaler
 
 '''
 Reducción de Dimensionalidad usando PCA:
 '''
-#Escalado de las características numéricas
+#Normalización de variables numéricas
 features = wine_df[['fixed acidity', 'volatile acidity', 'citric acid', 'residual sugar', 'chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density', 'pH', 'sulphates', 'alcohol']] #Excluimos la variable objetivo 'quality' y la columna 'Id'
 classes = wine_df['quality']
 
 features_scaled = StandardScaler().fit_transform(features) # normalizing the features# checking the shape of the scaled features and original dataset
 
-from sklearn import decomposition
 pca = decomposition.PCA().fit(features_scaled)
 features_pca = pca.transform(features_scaled)#Projecting the data to the new PCA space
 
@@ -99,3 +103,18 @@ plt.show()
 '''
 Clasificación:
 '''
+#Crear lo sets de train y test
+X_train, X_test, y_train, y_test = train_test_split(wine_df_pca, classes, test_size=0.3, random_state=42)#Proporción 70/30 para train y test
+print("============ Train and Test Set Shapes ============")
+print(f"Train set shape: {X_train.shape}, {y_train.shape}")
+print(f"Test set shape: {X_test.shape}, {y_test.shape}")
+
+
+#Entrenar los modelos clasificadores
+#Primer modelo: LDA (Análisis Discriminante Lineal)
+n_classes = len(np.unique(y_train))
+n = min(n_classes - 1, n_components)
+lda = LinearDiscriminantAnalysis(n_components=n) #n_components = Number of components (<= min(n_classes - 1, n_features))
+lda.fit(X_train, y_train)
+
+#Segundo modelo: K-nearest neighbours (KNN)
