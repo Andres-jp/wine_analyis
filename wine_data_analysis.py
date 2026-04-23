@@ -49,45 +49,55 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.model_selection import cross_val_score
+from ucimlrepo import fetch_ucirepo
 
 # Loading the dataset"
-current_path = os.getcwd()
-ruta_completa = os.path.join(current_path, 'WineQT.csv')
-wine_df = pd.read_csv(ruta_completa)
+wine_quality = fetch_ucirepo(name="Wine Quality")
+wine_df = wine_quality.data.original
 
 '''
 Preprocesamiento de Datos:
 '''
-print("============ Dataset head ============")
+print("\n\n============ Dataset head ============\n")
 print(wine_df.head()) # veiwing the top 5 rows of the dataset
-print("============ Dataset Info ============")
+
+print("\n\n============ Dataset Info ============\n")
 print(wine_df.info()) # checking the info of the dataset
 #varibale objetivo
-print("============ Variable Objetivo ============")
+print("\n\n============ Variable Objetivo ============\n")
 print(wine_df.quality.value_counts()) # checking the distribution of the target variable
 plt.figure(figsize = (12,8))
 sns.countplot(x = wine_df['quality'].astype(object))
 plt.suptitle('Quality Score Value Counts')
 plt.tight_layout()
 plt.show()
-print("============ Dataset Summary ============")
+
+print("\n\n============ Dataset Summary ============\n")
 print(wine_df.describe()) # checking the summary statistics of the dataset
+
+#Pre-processing dataset
+print("\nNumber of Duplicates in dataset:",wine_df.duplicated().sum())
+wine_df = wine_df.drop_duplicates()
+print(wine_df.head())
+#Eliminamos la variables binarias/no continuas para usar
+wine_df = wine_df.drop(columns=['color'])
+print(wine_df.info())
 
 '''
 Reducción de Dimensionalidad usando PCA:
 '''
 #Normalización de variables numéricas
-features = wine_df[['fixed acidity', 'volatile acidity', 'citric acid', 'residual sugar', 'chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density', 'pH', 'sulphates', 'alcohol']] #Excluimos la variable objetivo 'quality' y la columna 'Id'
+cont_features = wine_df[['fixed_acidity', 'volatile_acidity', 'citric_acid', 'residual_sugar', 'chlorides', 'free_sulfur_dioxide', 'total_sulfur_dioxide', 'density', 'pH', 'sulphates', 'alcohol']] #Excluimos la variable objetivo 'quality' y la columna 'Id'
 classes = wine_df['quality']
 
-features_scaled = StandardScaler().fit_transform(features) # normalizing the features# checking the shape of the scaled features and original dataset
+features_scaled = StandardScaler().fit_transform(cont_features) # normalizing the features# checking the shape of the scaled features and original dataset
 
 pca = decomposition.PCA().fit(features_scaled)
 features_pca = pca.transform(features_scaled)#Projecting the data to the new PCA space
 
-print("============ PCA Transformed Dataset Analysis ============")  
+print("\n\n============ PCA Transformed Dataset Analysis ============\n")  
 print("Eigenvalues:", pca.explained_variance_)
-print("Explained variance",pca.explained_variance_ratio_.cumsum()*100)
+print("\nExplained variance",pca.explained_variance_ratio_.cumsum()*100)
 
 #Project the data in a space of reduced dimensionality:
 #Nos quedamos con el número de componentes necesarios para explicar el 95% de la varianza cumulativa
@@ -95,10 +105,11 @@ for i in range(len(pca.explained_variance_ratio_)):
     if pca.explained_variance_ratio_.cumsum()[i]*100 > 95:
         n_components = i+1
         break
+
 print(f"Number of PCA components to keep: {n_components}")    
 wine_df_pca = pd.DataFrame(features_pca[:,0:n_components],columns=[f'PC{j+1}' for j in range(n_components)])
 
-print("============ PCA Transformed Dataset Head ============")
+print("\n\n============ PCA Transformed Dataset Head ============\n")
 print('Dimensionalidad datos en espacio PCA reducido = {}'.format(wine_df_pca.shape))
 print(wine_df_pca.head()) # checking the first 5 rows of the new PCA dataset
 
@@ -111,7 +122,7 @@ Clasificación:
 np.random.seed(42)
 #Crear lo sets de train y test
 X_train, X_test, y_train, y_test = train_test_split(wine_df_pca, classes, test_size=0.3, random_state=42)#Proporción 70/30 para train y test
-print("============ Train and Test Set Shapes ============")
+print("\n\n============ Train and Test Set Shapes ============\n")
 print(f"Train set shape: {X_train.shape}, {y_train.shape}")
 print(f"Test set shape: {X_test.shape}, {y_test.shape}")
 
@@ -132,13 +143,13 @@ y_pred_gnb = gnb.predict(X_test)
 '''
 Evaluación de Modelos:
 '''
-print("============ LDA ============")
+print("\n\n============ LDA ============\n")
 print("Accuracy LDA:", accuracy_score(y_test, y_pred_lda))
 mlda = confusion_matrix(y_test, y_pred_lda)
 #print(classification_report(y_test, y_pred_lda))
 
 
-print("============ NAÏVE BAYES ============")
+print("\n\n============ NAÏVE BAYES ============\n")
 print("Accuracy Naive Bayes:", accuracy_score(y_test, y_pred_gnb))
 mbayes = confusion_matrix(y_test, y_pred_gnb)
 #print(classification_report(y_test, y_pred_gnb))
